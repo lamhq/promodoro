@@ -12,6 +12,9 @@
   "rules": {
     "react/forbid-prop-types": [
       "off"
+    ],
+    "arrow-body-style": [
+      "off"
     ]
   }
 }
