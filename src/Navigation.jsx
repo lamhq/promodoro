@@ -4,7 +4,6 @@ import { Menu, Icon } from 'antd';
 
 const Navigation = ({ selected, onChange }) => {
   const handleClick = (e) => {
-    console.log(e.key);
     onChange(e.key);
   };
 

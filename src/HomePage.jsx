@@ -3,11 +3,33 @@ import { Button } from 'antd';
 import Navigation from './Navigation';
 import Clock from './Clock';
 
+function getTimerDuration(mode) {
+  let duration;
+  switch (mode) {
+    case 'work':
+      duration = 60 * 25;
+      break;
+
+    case 'break':
+      duration = 60 * 5;
+      break;
+
+    case 'long-break':
+      duration = 60 * 15;
+      break;
+
+    default:
+      break;
+  }
+  duration = 5;
+  return duration;
+}
+
+
 class HomePage extends React.Component {
   constructor() {
     super();
     this.timer = null;
-    this.interval = null;
   }
 
   state = {
@@ -16,51 +38,44 @@ class HomePage extends React.Component {
     mode: 'work',
   }
 
-  getTimerDuration() {
-    const { mode } = this.state;
-    switch (mode) {
-      case 'work':
-        return 60 * 25;
-
-      case 'break':
-        return 60 * 5;
-
-      case 'long-break':
-        return 60 * 15;
-
-      default:
-        return 0;
-    }
+  handleStart = () => {
+    this.startTimer();
   }
 
-  handleTimeout = () => {
-    clearInterval(this.interval);
-  };
-
-  handleInterval = () => {
-    this.setState(state => ({ remain: state.remain - 1 }));
-  };
-
-  handleStart = () => {
-    const duration = this.getTimerDuration();
-    console.log(duration / 60);
-    this.setState({
-      total: duration,
-      remain: duration,
-    });
-    this.timer = setTimeout(this.handleTimeout, (duration + 1) * 1000);
-    this.interval = setInterval(this.handleInterval, 1000);
-  };
-
   handleReset = () => {
-    clearTimeout(this.timer);
-    clearInterval(this.interval);
+    clearInterval(this.timer);
     this.setState(state => ({ remain: state.total }));
   };
 
   handleModeChange = (mode) => {
-    this.setState({ mode });
-    this.handleStart();
+    this.setState({ mode }, this.startTimer);
+  }
+
+  handleInterval = () => {
+    this.setState(state => ({ remain: state.remain - 1 }), () => {
+      const { remain } = this.state;
+      if (remain === 0) {
+        clearInterval(this.timer);
+        this.handleTimeout();
+      }
+    });
+  }
+
+  handleTimeout = () => {
+    console.log('time out');
+  }
+
+  startTimer = () => {
+    const { mode } = this.state;
+    const duration = getTimerDuration(mode);
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+    this.setState({
+      total: duration,
+      remain: duration,
+    });
+    this.timer = setInterval(this.handleInterval, 1000);
   }
 
   render() {
