@@ -1,8 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies */
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const os = require('os');
+const { NotificationCenter } = require('node-notifier');
+
+const notifier = new NotificationCenter({
+  withFallback: false, // Use Growl Fallback if <= 10.8
+});
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -30,6 +35,15 @@ function createWindow() {
     mainWindow = null;
   });
 }
+
+// Event handler for asynchronous incoming messages
+ipcMain.on('show-notification', (event, arg) => {
+  notifier.notify(arg,
+    (error, response, metadata) => {
+      event.sender.send('notification-action', metadata);
+    });
+});
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
