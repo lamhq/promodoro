@@ -6,7 +6,7 @@ import Clock from './Clock';
 import * as TIMER_MODES from './constants/timer-mode';
 import { showNotification, registerHandler } from './utils/notification';
 import { m2s, getTimerDuration } from './utils/common';
-
+import styles from './styles.less';
 
 class HomePage extends React.Component {
   constructor() {
@@ -52,20 +52,36 @@ class HomePage extends React.Component {
     workCount: 0,
   }
 
-  getButtonText() {
+  getMainButtonProps() {
     const { status } = this.state;
     switch (status) {
       case 'stopped':
-        return 'Run';
+        return {
+          icon: 'caret-right',
+          type: 'primary',
+          children: 'Run',
+        };
 
       case 'running':
-        return 'Pause';
+        return {
+          icon: 'pause',
+          type: 'warning',
+          children: 'Pause',
+        };
 
       case 'paused':
-        return 'Resume';
+        return {
+          icon: 'caret-right',
+          type: 'primary',
+          children: 'Resume',
+        };
 
       default:
-        return 'Unknown';
+        return {
+          icon: 'caret-right',
+          type: 'primary',
+          children: 'Run',
+        };
     }
   }
 
@@ -204,6 +220,7 @@ class HomePage extends React.Component {
         const { remain } = this.state;
         if (remain === 0) {
           this.stopTimer();
+          this.setState({ status: 'stopped' });
           this.handleTimerFinished();
         }
       },
@@ -301,21 +318,20 @@ class HomePage extends React.Component {
     return (
       <React.Fragment>
         <Navigation selected={mode} onChange={this.handleModeChange} />
-        <Clock remain={remain} total={total} />
-        <div>
+        <div className={styles.content}>
+          <Clock remain={remain} total={total} />
+        </div>
+        <div className={styles.controls}>
           <Button
-            type="primary"
             shape="round"
-            icon="play-circle"
             size="large"
             onClick={this.handleButtonClick}
-          >
-            {this.getButtonText()}
-          </Button>
+            {...this.getMainButtonProps()}
+          />
           <Button
             type="default"
             shape="round"
-            icon="reload"
+            icon="stop"
             size="large"
             onClick={this.handleStop}
           >

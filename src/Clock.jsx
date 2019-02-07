@@ -15,6 +15,7 @@ const Clock = ({ total, remain }) => {
       type="circle"
       percent={remain * 100 / total}
       format={formatDuration}
+      width={200}
     />
   );
 };
