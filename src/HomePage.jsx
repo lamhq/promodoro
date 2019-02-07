@@ -13,6 +13,17 @@ class HomePage extends React.Component {
     super();
     this.interval = null;
     this.timer = null;
+    this.notifOptions = {
+      sound: true,
+      wait: true,
+      timeout: 15,
+      dropdownLabel: 'Postpone',
+      actions: [
+        '5 mins',
+        '10 mins',
+        '15 mins',
+      ],
+    };
     registerHandler(this.handleNotifAction);
   }
 
@@ -29,8 +40,11 @@ class HomePage extends React.Component {
     // next mode after the current timer finished
     nextMode: TIMER_MODES.BREAK,
 
-    // timer status: running, stopped
+    // timer status: running, stopped, paused
     status: 'stopped',
+
+    // number of passed work timers
+    workCount: 0,
   }
 
   /**
@@ -78,17 +92,33 @@ class HomePage extends React.Component {
    * Called when timer is finished
    */
   handleTimerFinished = () => {
-    const { mode } = this.state;
+    // long break each 4 work timers
+    const longBreakCircle = 4;
+    const { mode, workCount } = this.state;
     let nextMode;
-    // change to next mode
+    let newWorkCount = workCount;
+
+    // ask user to change to next mode
     if (mode === TIMER_MODES.WORK) {
-      nextMode = TIMER_MODES.BREAK;
+      newWorkCount += 1;
+      nextMode = (newWorkCount % longBreakCircle) === 0
+        ? TIMER_MODES.LONG_BREAK
+        : TIMER_MODES.BREAK;
       this.askForBreak();
+      if (nextMode === TIMER_MODES.LONG_BREAK) {
+        this.askForBreak();
+      } else {
+        this.askForBreak();
+      }
     } else {
       nextMode = TIMER_MODES.WORK;
       this.askForWork();
     }
-    this.setState({ nextMode });
+
+    this.setState({
+      nextMode,
+      workCount: newWorkCount,
+    });
   }
 
   /**
@@ -98,9 +128,16 @@ class HomePage extends React.Component {
   handleNotifAction = (e, arg) => {
     const { activationValue, activationType } = arg;
     const { status } = this.state;
+
     // redisplay notification in case user has no interactions
     if (activationType === 'timeout' && status === 'running') {
       this.postpone(m2s(3));
+      return;
+    }
+
+    // proceed to next state when user click on notification content
+    if (activationType === 'contentsClicked') {
+      this.setState(state => ({ mode: state.nextMode }), this.startTimer);
       return;
     }
 
@@ -149,18 +186,22 @@ class HomePage extends React.Component {
    */
   askForBreak() {
     showNotification({
+      ...this.notifOptions,
       title: 'Time to rest',
-      message: 'You should take a rest in 5 mins :)',
-      sound: true,
-      wait: true,
-      timeout: 15,
+      message: 'You should take a rest to be more productive :)',
       closeLabel: 'Rest',
-      dropdownLabel: 'Postpone',
-      actions: [
-        '5 mins',
-        '10 mins',
-        '15 mins',
-      ],
+    });
+  }
+
+  /**
+   * Show notification to ask user to take a break
+   */
+  askForLongBreak() {
+    showNotification({
+      ...this.notifOptions,
+      title: 'Long break',
+      message: 'Stand up and go around',
+      closeLabel: 'Rest',
     });
   }
 
@@ -169,18 +210,10 @@ class HomePage extends React.Component {
    */
   askForWork() {
     showNotification({
+      ...this.notifOptions,
       title: 'Back to work',
       message: 'Time to be on fire XD',
-      sound: true,
-      wait: true,
-      timeout: 15,
       closeLabel: 'Work',
-      dropdownLabel: 'Postpone',
-      actions: [
-        '5 mins',
-        '10 mins',
-        '15 mins',
-      ],
     });
   }
 
@@ -192,7 +225,9 @@ class HomePage extends React.Component {
   }
 
   render() {
-    const { mode, total, remain } = this.state;
+    const {
+      mode, total, remain,
+    } = this.state;
     return (
       <React.Fragment>
         <Navigation selected={mode} onChange={this.handleModeChange} />
