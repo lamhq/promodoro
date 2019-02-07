@@ -11,6 +11,7 @@ import { m2s, getTimerDuration } from './utils/common';
 class HomePage extends React.Component {
   constructor() {
     super();
+    this.interval = null;
     this.timer = null;
     registerHandler(this.handleNotifAction);
   }
@@ -27,6 +28,9 @@ class HomePage extends React.Component {
 
     // next mode after the current timer finished
     nextMode: TIMER_MODES.BREAK,
+
+    // timer status: running, stopped
+    status: 'stopped',
   }
 
   /**
@@ -37,17 +41,23 @@ class HomePage extends React.Component {
   }
 
   /**
-   * Event handler for clicking Reset button
+   * Event handler for clicking Stop button
    */
-  handleReset = () => {
-    clearInterval(this.timer);
-    this.setState(state => ({ remain: state.total }));
+  handleStop = () => {
+    clearInterval(this.interval);
+    clearTimeout(this.timer);
+    // reset time
+    this.setState(state => ({
+      remain: state.total,
+      status: 'stopped',
+    }));
   };
 
   /**
    * Event handler for when clicking timer navigation
    */
   handleModeChange = (mode) => {
+    // restart timer when user change mode
     this.setState({ mode }, this.startTimer);
   }
 
@@ -58,8 +68,8 @@ class HomePage extends React.Component {
     this.setState(state => ({ remain: state.remain - 1 }), () => {
       const { remain } = this.state;
       if (remain === 0) {
-        clearInterval(this.timer);
-        this.handleTimeout();
+        clearInterval(this.interval);
+        this.handleTimerFinished();
       }
     });
   }
@@ -67,9 +77,10 @@ class HomePage extends React.Component {
   /**
    * Called when timer is finished
    */
-  handleTimeout = () => {
+  handleTimerFinished = () => {
     const { mode } = this.state;
     let nextMode;
+    // change to next mode
     if (mode === TIMER_MODES.WORK) {
       nextMode = TIMER_MODES.BREAK;
       this.askForBreak();
@@ -86,17 +97,21 @@ class HomePage extends React.Component {
    */
   handleNotifAction = (e, arg) => {
     const { activationValue, activationType } = arg;
-    if (activationType === 'timeout') {
-      this.postpone(m2s(5));
+    const { status } = this.state;
+    // redisplay notification in case user has no interactions
+    if (activationType === 'timeout' && status === 'running') {
+      this.postpone(m2s(3));
       return;
     }
 
     switch (activationValue) {
+      // switch no next mode
       case 'Rest':
       case 'Work':
         this.setState(state => ({ mode: state.nextMode }), this.startTimer);
         break;
 
+      // re-display notification when snoozed
       case '5 mins':
         this.postpone(m2s(5));
         break;
@@ -118,16 +133,15 @@ class HomePage extends React.Component {
    * Start timer
    */
   startTimer = () => {
+    this.handleStop();
     const { mode } = this.state;
     const duration = getTimerDuration(mode);
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
     this.setState({
       total: duration,
       remain: duration,
+      status: 'running',
     });
-    this.timer = setInterval(this.handleInterval, 1000);
+    this.interval = setInterval(this.handleInterval, 1000);
   }
 
   /**
@@ -174,7 +188,7 @@ class HomePage extends React.Component {
    * Redisplay notification after seconds
    */
   postpone(duration) {
-    setTimeout(this.handleTimeout, duration * 1000);
+    this.timer = setTimeout(this.handleTimerFinished, duration * 1000);
   }
 
   render() {
@@ -198,9 +212,9 @@ class HomePage extends React.Component {
             shape="round"
             icon="reload"
             size="large"
-            onClick={this.handleReset}
+            onClick={this.handleStop}
           >
-            Reset
+            Stop
           </Button>
         </div>
       </React.Fragment>
