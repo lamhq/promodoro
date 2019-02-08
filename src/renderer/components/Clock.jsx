@@ -16,6 +16,7 @@ const Clock = ({ total, remain }) => {
       percent={remain * 100 / total}
       format={formatDuration}
       width={200}
+      strokeColor="#1890ff"
     />
   );
 };

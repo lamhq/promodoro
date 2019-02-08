@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import React from 'react';
 import { Button } from 'antd';
 import Navigation from './Navigation';
@@ -16,6 +15,7 @@ class HomePage extends React.Component {
     this.notifOptions = {
       wait: true,
       timeout: 15,
+      closeLabel: 'Close',
       dropdownLabel: 'Postpone',
       actions: [
         '5 mins',
@@ -29,6 +29,7 @@ class HomePage extends React.Component {
     this.handleNotification = this.handleNotification.bind(this);
     this.handleTimerFinished = this.handleTimerFinished.bind(this);
     this.handleInterval = this.handleInterval.bind(this);
+    // this.askForStart = this.askForStart.bind(this);
     registerHandler(this.handleNotification);
   }
 
@@ -56,31 +57,19 @@ class HomePage extends React.Component {
     const { status } = this.state;
     switch (status) {
       case 'stopped':
+      case 'paused':
         return {
           icon: 'caret-right',
-          type: 'primary',
-          children: 'Run',
         };
 
       case 'running':
         return {
           icon: 'pause',
-          type: 'warning',
-          children: 'Pause',
-        };
-
-      case 'paused':
-        return {
-          icon: 'caret-right',
-          type: 'primary',
-          children: 'Resume',
         };
 
       default:
         return {
           icon: 'caret-right',
-          type: 'primary',
-          children: 'Run',
         };
     }
   }
@@ -106,6 +95,7 @@ class HomePage extends React.Component {
    * Start timer
    */
   stopTimer() {
+    clearTimeout(this.timer);
     clearInterval(this.interval);
   }
 
@@ -117,8 +107,7 @@ class HomePage extends React.Component {
       ...this.notifOptions,
       sound: 'Glass',
       title: 'Time to rest',
-      message: 'You should take a rest to be more productive :)',
-      closeLabel: 'Rest',
+      message: 'You should take a rest to be more productive.',
     });
   }
 
@@ -129,8 +118,7 @@ class HomePage extends React.Component {
     showNotification({
       ...this.notifOptions,
       title: 'Long break',
-      message: 'Stand up and go around',
-      closeLabel: 'Rest',
+      message: 'Stand up and go around.',
     });
   }
 
@@ -142,8 +130,7 @@ class HomePage extends React.Component {
       ...this.notifOptions,
       sound: 'Ping',
       title: 'Back to work',
-      message: 'Time to be on fire XD',
-      closeLabel: 'Work',
+      message: 'Time to be on fire.',
     });
   }
 
@@ -286,12 +273,6 @@ class HomePage extends React.Component {
     }
 
     switch (activationValue) {
-      // switch no next mode
-      case 'Rest':
-      case 'Work':
-        this.setState(state => ({ mode: state.nextMode }), this.handleStart);
-        break;
-
       // re-display notification when snoozed
       case '5 mins':
         this.postpone(m2s(5));
@@ -318,24 +299,24 @@ class HomePage extends React.Component {
       <React.Fragment>
         <Navigation selected={mode} onChange={this.handleModeChange} />
         <div className={styles.content}>
+
           <Clock remain={remain} total={total} />
         </div>
         <div className={styles.controls}>
           <Button
-            shape="round"
-            size="large"
+            shape="circle"
+            type="primary"
             onClick={this.handleButtonClick}
+            className={styles.button}
             {...this.getMainButtonProps()}
           />
           <Button
-            type="default"
-            shape="round"
-            icon="stop"
-            size="large"
+            shape="circle"
+            type="primary"
             onClick={this.handleStop}
-          >
-            Stop
-          </Button>
+            className={styles.button}
+            icon="stop"
+          />
         </div>
       </React.Fragment>
     );
