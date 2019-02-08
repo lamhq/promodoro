@@ -3,11 +3,11 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
-const outputDir = path.resolve(__dirname, 'dist');
+const outputDir = path.resolve(__dirname, 'dist/renderer');
 
 module.exports = {
   entry: {
-    app: ['babel-polyfill', './src/index.jsx'],
+    app: ['babel-polyfill', './src/renderer/index.jsx'],
   },
   output: {
     path: outputDir,
@@ -19,8 +19,8 @@ module.exports = {
     // Automatically generate an HTML5 file for you that includes all your webpack bundles
     new HtmlWebpackPlugin({
       title: 'Promodoro',
-      favicon: './src/assets/favicon.ico',
-      template: './src/index.html',
+      favicon: './src/renderer/assets/favicon.ico',
+      template: './src/renderer/index.html',
     }),
   ],
   resolve: {

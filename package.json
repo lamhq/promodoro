@@ -1,13 +1,22 @@
 {
   "name": "promodoro",
-  "version": "1.0.0",
   "description": "A Promodoro timer application",
-  "main": "main.js",
+  "version": "1.0.0",
+  "author": "Lam Huynh",
+  "main": "src/main/index.js",
+  "build": {
+    "appId": "promodoro",
+    "mac": {
+      "category": "your.app.category.type"
+    }
+  },
   "scripts": {
     "electron": "electron .",
     "wp-server": "webpack-dev-server --config webpack.dev.js",
     "start": "npm run wp-server | npm run electron",
-    "package": "webpack-cli --config webpack.prod.js"
+    "build": "webpack-cli --config webpack.prod.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "repository": "https://github.com/lamhq/promodoro",
   "keywords": [
@@ -15,7 +24,6 @@
     "Promodoro",
     "Timer"
   ],
-  "author": "Lam Huynh",
   "dependencies": {
     "antd": "^3.10.5",
     "connected-react-router": "^6.2.2",
@@ -43,6 +51,7 @@
     "clean-webpack-plugin": "^0.1.19",
     "css-loader": "^1.0.1",
     "electron": "^4.0.3",
+    "electron-builder": "^20.38.5",
     "eslint": "^5.3.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",

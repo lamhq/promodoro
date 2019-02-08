@@ -10,7 +10,7 @@ module.exports = merge(common, {
   devServer: {
     hot: true,
     open: false,
-    contentBase: './dist',
+    contentBase: './dist/renderer',
     historyApiFallback: true,
     port: 4001,
     proxy: {

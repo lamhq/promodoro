@@ -5,17 +5,13 @@ const path = require('path');
 const os = require('os');
 const { NotificationCenter } = require('node-notifier');
 
-const notifier = new NotificationCenter({
-  withFallback: false, // Use Growl Fallback if <= 10.8
-});
-
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 350, height: 330 });
+  mainWindow = new BrowserWindow({ width: 350, height: 380 });
 
   // and load the index.html of the app.
   mainWindow.loadURL('http://localhost:4001');
@@ -35,15 +31,6 @@ function createWindow() {
     mainWindow = null;
   });
 }
-
-// Event handler for asynchronous incoming messages
-ipcMain.on('show-notification', (event, arg) => {
-  notifier.notify(arg,
-    (error, response, metadata) => {
-      event.sender.send('notification-action', metadata);
-    });
-});
-
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -69,3 +56,16 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+// init notification module
+const notifier = new NotificationCenter({
+  withFallback: false, // Use Growl Fallback if <= 10.8
+});
+
+// Event handler for showing system notification
+ipcMain.on('show-notification', (event, arg) => {
+  notifier.notify(arg,
+    (error, response, metadata) => {
+      event.sender.send('notification-action', metadata);
+    });
+});

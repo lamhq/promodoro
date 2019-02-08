@@ -3,10 +3,10 @@ import React from 'react';
 import { Button } from 'antd';
 import Navigation from './Navigation';
 import Clock from './Clock';
-import * as TIMER_MODES from './constants/timer-mode';
-import { showNotification, registerHandler } from './utils/notification';
-import { m2s, getTimerDuration } from './utils/common';
-import styles from './styles.less';
+import * as TIMER_MODES from '../constants/timer-mode';
+import { showNotification, registerHandler } from '../utils/notification';
+import { m2s, getTimerDuration } from '../utils/common';
+import styles from './HomePage.less';
 
 class HomePage extends React.Component {
   constructor() {
