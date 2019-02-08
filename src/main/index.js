@@ -11,10 +11,20 @@ let mainWindow;
 
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 350, height: 380 });
+  mainWindow = new BrowserWindow({
+    width: 350,
+    height: 400,
+    resizable: false,
+    maximizable: false,
+    webPreferences: {
+      nodeIntegration: false,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
 
   // and load the index.html of the app.
   mainWindow.loadURL('http://localhost:4001');
+  // mainWindow.loadURL(`file://${__dirname}/../../dist/renderer/index.html`);
 
   // enable React Developer Tools
   BrowserWindow.addDevToolsExtension(

@@ -4,19 +4,18 @@
   "version": "1.0.0",
   "author": "Lam Huynh",
   "main": "src/main/index.js",
+  "scripts": {
+    "electron": "electron .",
+    "dist": "electron-builder",
+    "start": "npm run wp-server | npm run electron",
+    "wp-server": "webpack-dev-server --env.NODE_ENV=dev --config webpack.dev.js",
+    "build": "webpack-cli --env.NODE_ENV=production --config webpack.prod.js"
+  },
   "build": {
     "appId": "promodoro",
     "mac": {
       "category": "your.app.category.type"
     }
-  },
-  "scripts": {
-    "electron": "electron .",
-    "wp-server": "webpack-dev-server --config webpack.dev.js",
-    "start": "npm run wp-server | npm run electron",
-    "build": "webpack-cli --config webpack.prod.js",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
   },
   "repository": "https://github.com/lamhq/promodoro",
   "keywords": [
@@ -26,8 +25,6 @@
   ],
   "dependencies": {
     "antd": "^3.10.5",
-    "connected-react-router": "^6.2.2",
-    "history": "^4.7.2",
     "moment": "^2.24.0",
     "node-notifier": "^5.4.0",
     "numeral": "^2.0.6",
@@ -35,8 +32,6 @@
     "react": "^16.7.0",
     "react-dom": "^16.6.1",
     "react-hot-loader": "^4.3.12",
-    "react-redux": "^6.0.0",
-    "react-router": "^4.3.1",
     "redux": "^4.0.1"
   },
   "devDependencies": {

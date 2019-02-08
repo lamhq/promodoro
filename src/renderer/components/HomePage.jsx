@@ -272,10 +272,9 @@ class HomePage extends React.Component {
    */
   handleNotification(e, arg) {
     const { activationValue, activationType } = arg;
-    const { status } = this.state;
 
     // redisplay notification in case user has no interactions
-    if (activationType === 'timeout' && status === 'running') {
+    if (activationType === 'timeout') {
       this.postpone(m2s(3));
       return;
     }
