@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button, Badge } from 'antd';
 import Navigation from './Navigation';
 import Clock from './Clock';
 import * as TIMER_MODES from '../constants/timer-mode';
@@ -23,13 +23,15 @@ class HomePage extends React.Component {
         '15 mins',
       ],
     };
+    this.handleStart = this.handleStart.bind(this);
+    this.handlePause = this.handlePause.bind(this);
+    this.handleResume = this.handleResume.bind(this);
     this.handleStop = this.handleStop.bind(this);
-    this.handleButtonClick = this.handleButtonClick.bind(this);
     this.handleModeChange = this.handleModeChange.bind(this);
     this.handleNotification = this.handleNotification.bind(this);
     this.handleTimerFinished = this.handleTimerFinished.bind(this);
     this.handleInterval = this.handleInterval.bind(this);
-    // this.askForStart = this.askForStart.bind(this);
+    this.askForStartMode = this.askForStartMode.bind(this);
     registerHandler(this.handleNotification);
   }
 
@@ -57,19 +59,27 @@ class HomePage extends React.Component {
     const { status } = this.state;
     switch (status) {
       case 'stopped':
+        return {
+          icon: 'caret-right',
+          onClick: this.handleStart,
+        };
+
       case 'paused':
         return {
           icon: 'caret-right',
+          onClick: this.handleResume,
         };
 
       case 'running':
         return {
           icon: 'pause',
+          onClick: this.handlePause,
         };
 
       default:
         return {
           icon: 'caret-right',
+          onClick: this.handleStart,
         };
     }
   }
@@ -100,6 +110,30 @@ class HomePage extends React.Component {
   }
 
   /**
+   * Show notification to ask user advance to next mode
+   */
+  askForStartMode() {
+    const { nextMode } = this.state;
+    // ask user to change to next mode
+    switch (nextMode) {
+      case TIMER_MODES.LONG_BREAK:
+        this.askForLongBreak();
+        break;
+
+      case TIMER_MODES.BREAK:
+        this.askForBreak();
+        break;
+
+      case TIMER_MODES.WORK:
+        this.askForWork();
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  /**
    * Show notification to ask user to take a break
    */
   askForBreak() {
@@ -107,7 +141,7 @@ class HomePage extends React.Component {
       ...this.notifOptions,
       sound: 'Glass',
       title: 'Time to rest',
-      message: 'You should take a rest to be more productive.',
+      message: 'You should take a rest to recover.',
     });
   }
 
@@ -117,6 +151,7 @@ class HomePage extends React.Component {
   askForLongBreak() {
     showNotification({
       ...this.notifOptions,
+      sound: 'Basso',
       title: 'Long break',
       message: 'Stand up and go around.',
     });
@@ -138,30 +173,7 @@ class HomePage extends React.Component {
    * Redisplay notification after seconds
    */
   postpone(duration) {
-    this.timer = setTimeout(this.handleTimerFinished, duration * 1000);
-  }
-
-  /**
-   * Event handler for clicking Start/Pause/Resume button
-   */
-  handleButtonClick() {
-    const { status } = this.state;
-    switch (status) {
-      case 'stopped':
-        this.handleStart();
-        break;
-
-      case 'running':
-        this.handlePause();
-        break;
-
-      case 'paused':
-        this.handleResume();
-        break;
-
-      default:
-        break;
-    }
+    this.timer = setTimeout(this.askForStartMode, duration * 1000);
   }
 
   handleStart() {
@@ -220,7 +232,7 @@ class HomePage extends React.Component {
   handleTimerFinished() {
     const { mode, workCount } = this.state;
     let nextMode;
-
+    // find the next mode
     if (mode === TIMER_MODES.WORK) {
       // long break each 4 work timers
       const longBreakCircle = 4;
@@ -232,25 +244,7 @@ class HomePage extends React.Component {
     } else {
       nextMode = TIMER_MODES.WORK;
     }
-    this.setState({ nextMode });
-
-    // ask user to change to next mode
-    switch (nextMode) {
-      case TIMER_MODES.LONG_BREAK:
-        this.askForLongBreak();
-        break;
-
-      case TIMER_MODES.BREAK:
-        this.askForBreak();
-        break;
-
-      case TIMER_MODES.WORK:
-        this.askForWork();
-        break;
-
-      default:
-        break;
-    }
+    this.setState({ nextMode }, this.askForStartMode);
   }
 
   /**
@@ -293,29 +287,32 @@ class HomePage extends React.Component {
 
   render() {
     const {
-      mode, total, remain,
+      mode, total, remain, workCount,
     } = this.state;
     return (
       <React.Fragment>
         <Navigation selected={mode} onChange={this.handleModeChange} />
         <div className={styles.content}>
-
+          <Badge
+            count={parseInt(workCount, 10)}
+            showZero
+            className={styles.badge}
+          />
           <Clock remain={remain} total={total} />
         </div>
         <div className={styles.controls}>
           <Button
             shape="circle"
             type="primary"
-            onClick={this.handleButtonClick}
             className={styles.button}
             {...this.getMainButtonProps()}
           />
           <Button
             shape="circle"
             type="primary"
-            onClick={this.handleStop}
             className={styles.button}
             icon="stop"
+            onClick={this.handleStop}
           />
         </div>
       </React.Fragment>
