@@ -2,18 +2,20 @@
 const merge = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const common = require('./webpack.common.js');
 
 module.exports = (env) => {
   return merge(common(env), {
     mode: 'production',
-    devtool: 'source-map',
+    devtool: '',
     output: {
       filename: 'scripts.[chunkhash].js',
     },
     optimization: {
       minimizer: [
         new OptimizeCSSAssetsPlugin(),
+        new UglifyJsPlugin(),
       ],
     },
     plugins: [
