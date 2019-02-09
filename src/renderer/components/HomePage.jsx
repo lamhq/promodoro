@@ -3,7 +3,11 @@ import { Button, Badge } from 'antd';
 import Navigation from './Navigation';
 import Clock from './Clock';
 import * as TIMER_MODES from '../constants/timer-mode';
-import { showNotification, registerHandler } from '../utils/notification';
+import {
+  showNotification,
+  registerHandler,
+  removeHandler,
+} from '../utils/notification';
 import { m2s, getTimerDuration } from '../utils/common';
 import styles from './HomePage.less';
 
@@ -30,8 +34,7 @@ class HomePage extends React.Component {
     this.handleModeChange = this.handleModeChange.bind(this);
     this.handleNotification = this.handleNotification.bind(this);
     this.handleInterval = this.handleInterval.bind(this);
-    this.askForStartMode = this.askForStartMode.bind(this);
-    registerHandler(this.handleNotification);
+    this.askToNextMode = this.askToNextMode.bind(this);
   }
 
   state = {
@@ -52,6 +55,30 @@ class HomePage extends React.Component {
 
     // number of passed work timers
     workCount: 0,
+  }
+
+  componentDidMount() {
+    // register event handler for notification events
+    registerHandler(this.handleNotification);
+
+    // check to start timer if it is stopped
+    setInterval(() => {
+      const { status, remain } = this.state;
+      if (status === 'stopped'
+        || (status === 'paused' && remain > 0)) {
+        this.setState({ nextMode: 'work' });
+        showNotification({
+          ...this.notifOptions,
+          sound: 'Ping',
+          title: 'Start work?',
+          message: 'Timer hasn\'t been running, do you want to start it?',
+        });
+      }
+    }, m2s(10) * 1000);
+  }
+
+  componentWillUnmount() {
+    removeHandler(this.handleNotification);
   }
 
   getMainButtonProps() {
@@ -111,10 +138,11 @@ class HomePage extends React.Component {
   /**
    * Show notification to ask user advance to next mode
    */
-  askForStartMode() {
-    const { nextMode } = this.state;
-    let options = {};
+  askToNextMode() {
+    const { nextMode, status } = this.state;
+    if (status === 'stopped') return;
 
+    let options = {};
     switch (nextMode) {
       case TIMER_MODES.LONG_BREAK:
         options = {
@@ -154,7 +182,7 @@ class HomePage extends React.Component {
    * Redisplay notification after seconds
    */
   postpone(duration) {
-    this.timer = setTimeout(this.askForStartMode, duration * 1000);
+    this.timer = setTimeout(this.askToNextMode, duration * 1000);
   }
 
   handleStart() {
@@ -197,7 +225,7 @@ class HomePage extends React.Component {
     const { remain, mode, workCount } = this.state;
     if (remain === 0) {
       this.stopTimer();
-      this.setState({ status: 'stopped' });
+      this.setState({ status: 'paused' });
 
       let nextMode;
       // find the next mode
@@ -212,7 +240,7 @@ class HomePage extends React.Component {
       } else {
         nextMode = TIMER_MODES.WORK;
       }
-      this.setState({ nextMode }, this.askForStartMode);
+      this.setState({ nextMode }, this.askToNextMode);
     } else {
       this.setState({ remain: remain - 1 });
     }
@@ -238,6 +266,11 @@ class HomePage extends React.Component {
     }
 
     switch (activationValue) {
+      // prevent notification continue showing
+      case 'Close':
+        this.setState({ status: 'stopped' });
+        break;
+
       // re-display notification when snoozed
       case '5 mins':
         this.postpone(m2s(5));

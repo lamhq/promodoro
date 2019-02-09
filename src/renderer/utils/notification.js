@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const { ipcRenderer } = window;
+const channel = 'notification-action';
 
 export function showNotification(options) {
   if (!ipcRenderer) {
@@ -16,6 +17,15 @@ export function registerHandler(listener) {
     return;
   }
 
-  ipcRenderer.removeAllListeners('notification-action');
-  ipcRenderer.on('notification-action', listener);
+  ipcRenderer.removeAllListeners(channel);
+  ipcRenderer.on(channel, listener);
+}
+
+export function removeHandler(listener) {
+  if (!ipcRenderer) {
+    console.log('removeHandler is called but no ipcRenderer instance setted, exiting...');
+    return;
+  }
+
+  ipcRenderer.removeListener(channel, listener);
 }
