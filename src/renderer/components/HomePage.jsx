@@ -29,7 +29,6 @@ class HomePage extends React.Component {
     this.handleStop = this.handleStop.bind(this);
     this.handleModeChange = this.handleModeChange.bind(this);
     this.handleNotification = this.handleNotification.bind(this);
-    this.handleTimerFinished = this.handleTimerFinished.bind(this);
     this.handleInterval = this.handleInterval.bind(this);
     this.askForStartMode = this.askForStartMode.bind(this);
     registerHandler(this.handleNotification);
@@ -48,7 +47,7 @@ class HomePage extends React.Component {
     // next mode after the current timer finished
     nextMode: TIMER_MODES.BREAK,
 
-    // timer status: running, stopped, paused
+    // timer status
     status: 'stopped',
 
     // number of passed work timers
@@ -114,58 +113,40 @@ class HomePage extends React.Component {
    */
   askForStartMode() {
     const { nextMode } = this.state;
-    // ask user to change to next mode
+    let options = {};
+
     switch (nextMode) {
       case TIMER_MODES.LONG_BREAK:
-        this.askForLongBreak();
+        options = {
+          sound: 'Basso',
+          title: 'Long break',
+          message: 'Stand up and go around.',
+        };
         break;
 
       case TIMER_MODES.BREAK:
-        this.askForBreak();
+        options = {
+          sound: 'Glass',
+          title: 'Time to rest',
+          message: 'You should take a rest to recover.',
+        };
         break;
 
       case TIMER_MODES.WORK:
-        this.askForWork();
+        options = {
+          sound: 'Ping',
+          title: 'Back to work',
+          message: 'Time to be on fire.',
+        };
         break;
 
       default:
         break;
     }
-  }
 
-  /**
-   * Show notification to ask user to take a break
-   */
-  askForBreak() {
     showNotification({
       ...this.notifOptions,
-      sound: 'Glass',
-      title: 'Time to rest',
-      message: 'You should take a rest to recover.',
-    });
-  }
-
-  /**
-   * Show notification to ask user to take a break
-   */
-  askForLongBreak() {
-    showNotification({
-      ...this.notifOptions,
-      sound: 'Basso',
-      title: 'Long break',
-      message: 'Stand up and go around.',
-    });
-  }
-
-  /**
-   * Show notification to ask user to continue working
-   */
-  askForWork() {
-    showNotification({
-      ...this.notifOptions,
-      sound: 'Ping',
-      title: 'Back to work',
-      message: 'Time to be on fire.',
+      ...options,
     });
   }
 
@@ -197,8 +178,8 @@ class HomePage extends React.Component {
    */
   handleStop() {
     this.stopTimer();
-    this.setTime();
     this.setState({ status: 'stopped' });
+    this.setTime();
   }
 
   /**
@@ -213,38 +194,28 @@ class HomePage extends React.Component {
    * Event handler for setInterval
    */
   handleInterval() {
-    this.setState(
-      state => ({ remain: state.remain - 1 }),
-      () => {
-        const { remain } = this.state;
-        if (remain === 0) {
-          this.stopTimer();
-          this.setState({ status: 'stopped' });
-          this.handleTimerFinished();
-        }
-      },
-    );
-  }
+    const { remain, mode, workCount } = this.state;
+    if (remain === 0) {
+      this.stopTimer();
+      this.setState({ status: 'stopped' });
 
-  /**
-   * Called when timer is finished
-   */
-  handleTimerFinished() {
-    const { mode, workCount } = this.state;
-    let nextMode;
-    // find the next mode
-    if (mode === TIMER_MODES.WORK) {
-      // long break each 4 work timers
-      const longBreakCircle = 4;
-      const nextWorkCount = workCount + 1;
-      nextMode = (nextWorkCount % longBreakCircle) === 0
-        ? TIMER_MODES.LONG_BREAK
-        : TIMER_MODES.BREAK;
-      this.setState({ workCount: nextWorkCount });
+      let nextMode;
+      // find the next mode
+      if (mode === TIMER_MODES.WORK) {
+        // long break each 4 work timers
+        const longBreakCircle = 4;
+        const nextWorkCount = workCount + 1;
+        nextMode = (nextWorkCount % longBreakCircle) === 0
+          ? TIMER_MODES.LONG_BREAK
+          : TIMER_MODES.BREAK;
+        this.setState({ workCount: nextWorkCount });
+      } else {
+        nextMode = TIMER_MODES.WORK;
+      }
+      this.setState({ nextMode }, this.askForStartMode);
     } else {
-      nextMode = TIMER_MODES.WORK;
+      this.setState({ remain: remain - 1 });
     }
-    this.setState({ nextMode }, this.askForStartMode);
   }
 
   /**
