@@ -93,8 +93,6 @@ module.exports = (env) => {
             {
               loader: 'less-loader',
               options: {
-                modifyVars: {
-                },
                 javascriptEnabled: true,
               },
             },

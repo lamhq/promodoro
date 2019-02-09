@@ -4,6 +4,8 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const os = require('os');
 const { NotificationCenter } = require('node-notifier');
+const isDevelopment = require('electron-is-dev');
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -22,16 +24,18 @@ function createWindow() {
     },
   });
 
-  // and load the index.html of the app.
-  mainWindow.loadURL('http://localhost:4001');
-  // mainWindow.loadURL(`file://${__dirname}/../../dist/renderer/index.html`);
-
-  // enable React Developer Tools
-  BrowserWindow.addDevToolsExtension(
-    path.join(os.homedir(), '/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0'),
-  );
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (isDevelopment) {
+    // enable React Developer Tools
+    BrowserWindow.addDevToolsExtension(
+      path.join(os.homedir(), '/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0'),
+    );
+    // open dev tool
+    mainWindow.webContents.openDevTools();
+    // and load the index.html of the app.
+    mainWindow.loadURL('http://localhost:4001');
+  } else {
+    mainWindow.loadURL(`file://${__dirname}/renderer/index.html`);
+  }
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {

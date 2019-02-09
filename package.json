@@ -5,10 +5,10 @@
   "author": "Lam Huynh",
   "main": "src/main/index.js",
   "scripts": {
+    "dev": "npm run wds | npm run electron",
+    "wds": "webpack-dev-server --env.NODE_ENV=dev --config webpack.dev.js",
     "electron": "electron .",
     "dist": "electron-builder",
-    "start": "npm run wp-server | npm run electron",
-    "wp-server": "webpack-dev-server --env.NODE_ENV=dev --config webpack.dev.js",
     "build": "webpack-cli --env.NODE_ENV=production --config webpack.prod.js"
   },
   "build": {
@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "antd": "^3.10.5",
+    "electron-is-dev": "^1.0.1",
     "moment": "^2.24.0",
     "node-notifier": "^5.4.0",
     "numeral": "^2.0.6",
