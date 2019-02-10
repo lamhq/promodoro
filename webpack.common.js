@@ -8,6 +8,7 @@ const outputDir = path.resolve(__dirname, 'dist/renderer');
 
 module.exports = (env) => {
   return {
+    target: 'electron-renderer',
     entry: {
       app: ['babel-polyfill', './src/renderer/index.jsx'],
     },
