@@ -2,10 +2,12 @@
 // Modules to control application life and create native browser window
 const path = require('path');
 const os = require('os');
-const { app, BrowserWindow, ipcMain } = require('electron');
+const {
+  app, BrowserWindow, ipcMain,
+} = require('electron');
 const { NotificationCenter } = require('node-notifier');
-const isDevelopment = require('electron-is-dev');
 
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -19,8 +21,7 @@ function createWindow() {
     resizable: false,
     maximizable: false,
     webPreferences: {
-      nodeIntegration: false,
-      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
     },
   });
 
@@ -34,7 +35,8 @@ function createWindow() {
     // and load the index.html of the app.
     mainWindow.loadURL('http://localhost:4001');
   } else {
-    mainWindow.loadURL(`file://${__dirname}/renderer/index.html`);
+    const dir = path.resolve(__dirname, '..');
+    mainWindow.loadURL(`file://${dir}/renderer/index.html`);
   }
 
   // Emitted when the window is closed.

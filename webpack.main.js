@@ -16,6 +16,9 @@ module.exports = (env) => {
       path: outputDir,
       filename: 'index.js',
     },
+    node: {
+      __dirname: false,
+    },
     optimization: {
       minimize: false,
     },
