@@ -1,8 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const os = require('os');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const { NotificationCenter } = require('node-notifier');
 const isDevelopment = require('electron-is-dev');
 

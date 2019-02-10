@@ -1,11 +1,13 @@
 import * as TIMER_MODES from '../constants/timer-mode';
 
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 /**
  * Convert minutes to seconds
  * @param {Number} second
  */
 export function m2s(second) {
-  return second * 60;
+  return isDevelopment ? second : second * 60;
 }
 
 /**

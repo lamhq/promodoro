@@ -1,10 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies */
+const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 
-const outputDir = path.resolve(__dirname, 'dist/renderer');
+const outputDir = path.resolve(__dirname, 'build/renderer');
 
 module.exports = (env) => {
   return {
@@ -23,6 +24,9 @@ module.exports = (env) => {
         title: 'Promodoro',
         favicon: './src/renderer/assets/favicon.ico',
         template: './src/renderer/index.html',
+      }),
+      new webpack.DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(env.NODE_ENV),
       }),
     ],
     resolve: {

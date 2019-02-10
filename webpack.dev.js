@@ -10,12 +10,8 @@ module.exports = (env) => {
     devServer: {
       hot: true,
       open: false,
-      contentBase: './dist/renderer',
-      historyApiFallback: true,
+      contentBase: './build/renderer',
       port: 4001,
-      proxy: {
-        '/api': 'http://localhost:4000',
-      },
     },
     plugins: [
       // Enables Hot Module Replacement, otherwise known as HMR
