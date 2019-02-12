@@ -1,13 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies */
 // Modules to control application life and create native browser window
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const os = require('os');
 const {
   app, BrowserWindow, ipcMain,
 } = require('electron');
-const { NotificationCenter } = require('node-notifier');
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== 'production';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -25,7 +25,7 @@ function createWindow() {
     },
   });
 
-  if (isDevelopment) {
+  if (isDev) {
     // enable React Developer Tools
     BrowserWindow.addDevToolsExtension(
       path.join(os.homedir(), '/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0'),
@@ -35,8 +35,7 @@ function createWindow() {
     // and load the index.html of the app.
     mainWindow.loadURL('http://localhost:4001');
   } else {
-    const dir = path.resolve(__dirname, '..');
-    mainWindow.loadURL(`file://${dir}/renderer/index.html`);
+    mainWindow.loadURL(`file://${__dirname}/renderer/index.html`);
   }
 
   // Emitted when the window is closed.
@@ -72,16 +71,3 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
-
-// init notification module
-const notifier = new NotificationCenter({
-  withFallback: false, // Use Growl Fallback if <= 10.8
-});
-
-// Event handler for showing system notification
-ipcMain.on('show-notification', (event, arg) => {
-  notifier.notify(arg,
-    (error, response, metadata) => {
-      event.sender.send('notification-action', metadata);
-    });
-});

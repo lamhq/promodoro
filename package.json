@@ -5,10 +5,9 @@
   "author": "Lam Huynh",
   "main": "src/main/index.js",
   "scripts": {
+    "start": "electron .",
     "wds": "webpack-dev-server --env.NODE_ENV=dev --config webpack.dev.js",
-    "electron": "electron .",
     "build-web": "webpack-cli --env.NODE_ENV=production --config webpack.prod.js",
-    "build-main": "webpack-cli --env.NODE_ENV=production --config webpack.main.js",
     "build": "electron-builder"
   },
   "build": {
@@ -28,8 +27,8 @@
   ],
   "dependencies": {
     "antd": "^3.10.5",
+    "dotenv": "^6.2.0",
     "moment": "^2.24.0",
-    "node-notifier": "^5.4.0",
     "numeral": "^2.0.6",
     "prop-types": "^15.6.2",
     "react": "^16.7.0",
