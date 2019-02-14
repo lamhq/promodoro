@@ -4,85 +4,57 @@ import Navigation from './Navigation';
 import Clock from './Clock';
 import * as TIMER_MODES from '../constants/timer-mode';
 import {
-  showNotification,
-  registerHandler,
-  removeHandler,
-} from '../utils/notification';
-import { m2s, getTimerDuration } from '../utils/common';
+  bounceDock, showNotification,
+} from '../utils/electron';
+import { getTimerDuration } from '../utils/common';
 import styles from './HomePage.less';
 
 class HomePage extends React.Component {
   constructor() {
     super();
-    this.interval = null;
-    this.timer = null;
-    this.notifOptions = {
-      wait: true,
-      timeout: 15,
-      closeLabel: 'Close',
-      dropdownLabel: 'Postpone',
-      actions: [
-        '5 mins',
-        '10 mins',
-        '15 mins',
-      ],
+    this.timerInterval = null;
+    this.dockInterval = null;
+    this.total = getTimerDuration(TIMER_MODES.WORK);
+    this.remain = this.total;
+    this.mode = TIMER_MODES.WORK;
+    this.status = 'stopped';
+    this.workCount = 0;
+    this.state = {
+      // total seconds for timer
+      total: this.total,
+      // remain seconds for timer
+      remain: this.remain,
+      // current timer mode
+      mode: this.mode,
+      // timer status
+      status: this.status,
+      // number of passed work timers
+      workCount: this.workCount,
     };
+
+    this.timer = null;
     this.handleStart = this.handleStart.bind(this);
     this.handlePause = this.handlePause.bind(this);
     this.handleResume = this.handleResume.bind(this);
     this.handleStop = this.handleStop.bind(this);
     this.handleModeChange = this.handleModeChange.bind(this);
-    this.handleNotification = this.handleNotification.bind(this);
     this.handleInterval = this.handleInterval.bind(this);
-    this.askToNextMode = this.askToNextMode.bind(this);
-  }
-
-  state = {
-    // total seconds for timer
-    total: getTimerDuration(TIMER_MODES.WORK),
-
-    // remain seconds for timer
-    remain: getTimerDuration(TIMER_MODES.WORK),
-
-    // current timer mode
-    mode: TIMER_MODES.WORK,
-
-    // next mode after the current timer finished
-    nextMode: TIMER_MODES.BREAK,
-
-    // timer status
-    status: 'stopped',
-
-    // number of passed work timers
-    workCount: 0,
   }
 
   componentDidMount() {
-    // register event handler for notification events
-    registerHandler(this.handleNotification);
-
-    // check to start timer if it is stopped
     setInterval(() => {
-      const { status, remain } = this.state;
-      if (status === 'stopped'
-        || (status === 'paused' && remain > 0)) {
-        this.setState({ nextMode: 'work' });
+      if (this.status !== 'running') {
         showNotification({
-          ...this.notifOptions,
-          sound: 'Ping',
-          title: 'Start work?',
-          message: 'Timer hasn\'t been running, do you want to start it?',
+          title: 'Timer is not running',
+          body: 'Timer hasn\'t been running. Click here to start it',
+          onClick: this.handleStart,
         });
       }
-    }, m2s(10) * 1000);
-  }
-
-  componentWillUnmount() {
-    removeHandler(this.handleNotification);
+    }, 30 * 1000);
   }
 
   getMainButtonProps() {
-    const { status } = this.state;
+    const { status } = this;
     switch (status) {
       case 'stopped':
         return {
@@ -110,13 +82,21 @@ class HomePage extends React.Component {
     }
   }
 
-  setTime() {
-    const { mode } = this.state;
-    const duration = getTimerDuration(mode);
+  updateState() {
     this.setState({
-      total: duration,
-      remain: duration,
+      total: this.total,
+      remain: this.remain,
+      mode: this.mode,
+      status: this.status,
+      workCount: this.workCount,
     });
+  }
+
+  resetTime() {
+    const duration = getTimerDuration(this.mode);
+    this.total = duration;
+    this.remain = duration;
+    this.updateState();
   }
 
   /**
@@ -124,81 +104,80 @@ class HomePage extends React.Component {
    */
   startTimer() {
     this.stopTimer();
-    this.interval = setInterval(this.handleInterval, 1000);
+    this.timerInterval = setInterval(this.handleInterval, 1000);
   }
 
   /**
    * Start timer
    */
   stopTimer() {
-    clearTimeout(this.timer);
-    clearInterval(this.interval);
+    clearInterval(this.timerInterval);
+  }
+
+  startBouncing() {
+    this.stopBouncing();
+    this.dockInterval = setInterval(bounceDock, 2000);
+  }
+
+  stopBouncing() {
+    clearInterval(this.dockInterval);
   }
 
   /**
    * Show notification to ask user advance to next mode
    */
-  askToNextMode() {
-    const { nextMode, status } = this.state;
-    if (status === 'stopped') return;
+  askToStartTimer() {
+    const { mode } = this;
 
-    let options = {};
-    switch (nextMode) {
+    let options = { title: '' };
+    switch (mode) {
       case TIMER_MODES.LONG_BREAK:
         options = {
-          sound: 'Basso',
           title: 'Long break',
-          message: 'Stand up and go around.',
+          body: 'Stand up and go around.',
         };
         break;
 
       case TIMER_MODES.BREAK:
         options = {
-          sound: 'Glass',
           title: 'Time to rest',
-          message: 'You should take a rest to recover.',
+          body: 'You should take a rest to recover.',
         };
         break;
 
       case TIMER_MODES.WORK:
         options = {
-          sound: 'Ping',
           title: 'Back to work',
-          message: 'Time to be on fire.',
+          body: 'Time to be on fire.',
         };
         break;
 
       default:
         break;
     }
-
-    showNotification({
-      ...this.notifOptions,
-      ...options,
-    });
-  }
-
-  /**
-   * Redisplay notification after seconds
-   */
-  postpone(duration) {
-    this.timer = setTimeout(this.askToNextMode, duration * 1000);
+    const { title, ...rest } = options;
+    const notif = new Notification(title, rest);
+    notif.onclick = this.handleStart;
   }
 
   handleStart() {
-    this.setTime();
+    this.stopBouncing();
+    this.resetTime();
     this.startTimer();
-    this.setState({ status: 'running' });
+    this.status = 'running';
+    this.updateState();
   }
 
   handlePause() {
     this.stopTimer();
-    this.setState({ status: 'paused' });
+    this.status = 'paused';
+    this.updateState();
   }
 
   handleResume() {
     this.startTimer();
-    this.setState({ status: 'running' });
+    this.status = 'running';
+    this.updateState();
   }
 
   /**
@@ -206,8 +185,10 @@ class HomePage extends React.Component {
    */
   handleStop() {
     this.stopTimer();
-    this.setState({ status: 'stopped' });
-    this.setTime();
+    this.stopBouncing();
+    this.resetTime();
+    this.status = 'stopped';
+    this.updateState();
   }
 
   /**
@@ -215,78 +196,43 @@ class HomePage extends React.Component {
    */
   handleModeChange(mode) {
     // restart timer when user change mode
-    this.setState({ mode }, this.handleStart);
+    this.mode = mode;
+    this.handleStart();
+    this.updateState();
   }
 
   /**
    * Event handler for setInterval
    */
   handleInterval() {
-    const { remain, mode, workCount } = this.state;
+    const {
+      remain, mode,
+    } = this;
     if (remain === 0) {
       this.stopTimer();
-      this.setState({ status: 'paused' });
+      this.status = 'paused';
+      if (mode === TIMER_MODES.WORK) {
+        this.workCount += 1;
+      }
 
       let nextMode;
-      // find the next mode
       if (mode === TIMER_MODES.WORK) {
         // long break each 4 work timers
         const longBreakCircle = 4;
-        const nextWorkCount = workCount + 1;
-        nextMode = (nextWorkCount % longBreakCircle) === 0
+        nextMode = (this.workCount % longBreakCircle) === 0
           ? TIMER_MODES.LONG_BREAK
           : TIMER_MODES.BREAK;
-        this.setState({ workCount: nextWorkCount });
       } else {
         nextMode = TIMER_MODES.WORK;
       }
-      this.setState({ nextMode }, this.askToNextMode);
+      this.mode = nextMode;
+      this.resetTime();
+      this.askToStartTimer();
+      this.startBouncing();
     } else {
-      this.setState({ remain: remain - 1 });
+      this.remain -= 1;
     }
-  }
-
-  /**
-   * Event handler for notification interaction
-   * @see https://electronjs.org/docs/api/ipc-renderer
-   */
-  handleNotification(e, arg) {
-    const { activationValue, activationType } = arg;
-
-    // redisplay notification in case user has no interactions
-    if (activationType === 'timeout') {
-      this.postpone(m2s(3));
-      return;
-    }
-
-    // proceed to next state when user click on notification content
-    if (activationType === 'contentsClicked') {
-      this.setState(state => ({ mode: state.nextMode }), this.handleStart);
-      return;
-    }
-
-    switch (activationValue) {
-      // prevent notification continue showing
-      case 'Close':
-        this.setState({ status: 'stopped' });
-        break;
-
-      // re-display notification when snoozed
-      case '5 mins':
-        this.postpone(m2s(5));
-        break;
-
-      case '10 mins':
-        this.postpone(m2s(10));
-        break;
-
-      case '15 mins':
-        this.postpone(m2s(15));
-        break;
-
-      default:
-        break;
-    }
+    this.updateState();
   }
 
   render() {
